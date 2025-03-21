@@ -1,36 +1,44 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Auth } from 'aws-amplify';
+import { Link } from 'react-router-dom';
+import { useAuth } from 'react-oidc-context';
 
-const Navigation = ({ isAuthenticated, setIsAuthenticated }) => {
-  const navigate = useNavigate();
-
-  async function handleLogout() {
-    try {
-      await Auth.signOut();
-      setIsAuthenticated(false);
-      navigate('/');
-    } catch (error) {
-      console.error('Error signing out: ', error);
-    }
-  }
+const Navigation = () => {
+  const auth = useAuth();
 
   return (
     <nav className="navbar">
-      <div className="navbar-brand">
+      <div className="logo">
         <Link to="/">Workflow Manager</Link>
       </div>
-      <div className="navbar-menu">
-        {isAuthenticated ? (
+      <ul className="nav-links">
+        {auth.isAuthenticated ? (
           <>
-            <Link to="/dashboard">Dashboard</Link>
-            <Link to="/tasks">Tasks</Link>
-            <button onClick={handleLogout} className="logout-btn">Logout</button>
+            <li>
+              <Link to="/dashboard">Dashboard</Link>
+            </li>
+            <li>
+              <Link to="/tasks">Tasks</Link>
+            </li>
+            <li>
+              <button 
+                onClick={() => auth.signoutRedirect()} 
+                className="nav-button"
+              >
+                Sign Out
+              </button>
+            </li>
           </>
         ) : (
-          <Link to="/">Login</Link>
+          <li>
+            <button 
+              onClick={() => auth.signinRedirect()}
+              className="nav-button"
+            >
+              Sign In
+            </button>
+          </li>
         )}
-      </div>
+      </ul>
     </nav>
   );
 };

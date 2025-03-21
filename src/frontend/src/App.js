@@ -1,71 +1,72 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { Authenticator } from '@aws-amplify/ui-react';
-import { Auth } from 'aws-amplify';
-import '@aws-amplify/ui-react/styles.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from 'react-oidc-context';
 
 // Components
 import Dashboard from './components/Dashboard';
 import TasksList from './components/TasksList';
 import TaskDetail from './components/TaskDetail';
-import Callback from './components/Callback';
 import Navigation from './components/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Main App component
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const auth = useAuth();
 
-  useEffect(() => {
-    onLoad();
-  }, []);
-
-  async function onLoad() {
-    try {
-      await Auth.currentSession();
-      setIsAuthenticated(true);
-    } catch (e) {
-      if (e !== 'No current user') {
-        console.error(e);
-      }
-    }
-    setIsAuthenticating(false);
+  // Handle different auth states
+  switch (auth.activeNavigator) {
+    case "signinSilent":
+      return <div>Signing you in...</div>;
+    case "signoutRedirect":
+      return <div>Signing you out...</div>;
   }
 
-  if (isAuthenticating) {
-    return <div>Loading...</div>;
+  if (auth.isLoading) {
+    return <div>Loading authentication...</div>;
+  }
+
+  if (auth.error) {
+    return <div>Authentication error: {auth.error.message}</div>;
   }
 
   return (
-    <Authenticator.Provider>
+    <Router>
       <div className="App">
-        <Navigation isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+        <Navigation />
         <main>
           <Routes>
             <Route path="/" element={
-              isAuthenticated ? <Navigate to="/dashboard" /> : <Authenticator />
+              auth.isAuthenticated ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <div className="login-container">
+                  <h1>Workflow Manager</h1>
+                  <p>Please sign in to continue</p>
+                  <button onClick={() => auth.signinRedirect()}>
+                    Sign In with Cognito
+                  </button>
+                </div>
+              )
             } />
             <Route path="/dashboard" element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isAuthenticated={auth.isAuthenticated}>
                 <Dashboard />
               </ProtectedRoute>
             } />
             <Route path="/tasks" element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isAuthenticated={auth.isAuthenticated}>
                 <TasksList />
               </ProtectedRoute>
             } />
             <Route path="/tasks/:id" element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <ProtectedRoute isAuthenticated={auth.isAuthenticated}>
                 <TaskDetail />
               </ProtectedRoute>
             } />
-            <Route path="/callback" element={<Callback setIsAuthenticated={setIsAuthenticated} />} />
           </Routes>
         </main>
       </div>
-    </Authenticator.Provider>
+    </Router>
   );
 }
 

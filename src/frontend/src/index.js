@@ -1,40 +1,24 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import App from './App';
-import { Amplify } from 'aws-amplify';
-import config from './config';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import { AuthProvider } from "react-oidc-context";
+import './index.css';
 
-// Configure Amplify
-Amplify.configure({
-  Auth: {
-    region: config.cognito.REGION,
-    userPoolId: config.cognito.USER_POOL_ID,
-    userPoolWebClientId: config.cognito.APP_CLIENT_ID,
-    oauth: {
-      domain: config.cognito.DOMAIN,
-      scope: ['email', 'profile', 'openid'],
-      redirectSignIn: config.cognito.REDIRECT_SIGN_IN,
-      redirectSignOut: config.cognito.REDIRECT_SIGN_OUT,
-      responseType: 'code'
-    }
-  },
-  API: {
-    endpoints: [
-      {
-        name: 'api',
-        endpoint: config.apiGateway.URL,
-        region: config.cognito.REGION
-      }
-    ]
-  }
-});
+const cognitoAuthConfig = {
+  authority: "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_VTDzJDBPV",
+  client_id: "30o9hu5r46ufq4o1ask25t4bpr",
+  redirect_uri: "https://d84l1y8p4kdic.cloudfront.net",
+  response_type: "code",
+  scope: "phone openid email",
+};
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
+
+// wrap the application with AuthProvider
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
+    <AuthProvider {...cognitoAuthConfig}>
       <App />
-    </BrowserRouter>
+    </AuthProvider>
   </React.StrictMode>
 );

@@ -1,31 +1,33 @@
 import os
 import secrets
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Config:
     """Configuration settings for the application"""
     
     # Flask settings
-    SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
-    DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key')
+    DEBUG = os.environ.get('FLASK_ENV') == 'development'
     
     # CORS settings
     CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
     
     # Database settings
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///workflow_manager.db')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///workflow.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # AWS Cognito settings
-    COGNITO_REGION = os.environ.get('COGNITO_REGION', 'us-east-1')
-    COGNITO_USER_POOL_ID = os.environ.get('COGNITO_USER_POOL_ID')
-    COGNITO_CLIENT_ID = os.environ.get('COGNITO_CLIENT_ID')
+    COGNITO_REGION = os.environ.get('COGNITO_REGION', 'us-east-2')
+    COGNITO_USER_POOL_ID = os.environ.get('COGNITO_USER_POOL_ID', 'us-east-2_VTDzJDBPV')
+    COGNITO_CLIENT_ID = os.environ.get('COGNITO_CLIENT_ID', '30o9hu5r46ufq4o1ask25t4bpr')
+    COGNITO_DOMAIN = os.environ.get('COGNITO_DOMAIN', 'your-cognito-domain.auth.us-east-2.amazoncognito.com')
+    COGNITO_CALLBACK_URL = os.environ.get('COGNITO_CALLBACK_URL', 'https://d84l1y8p4kdic.cloudfront.net')
+    COGNITO_LOGOUT_URL = os.environ.get('COGNITO_LOGOUT_URL', 'https://d84l1y8p4kdic.cloudfront.net')
     
     # Cognito OIDC/OAuth Configuration
-    COGNITO_DOMAIN = os.environ.get('COGNITO_DOMAIN')
-    COGNITO_CALLBACK_URL = os.environ.get('COGNITO_CALLBACK_URL', 'http://localhost:3000/callback')
-    COGNITO_LOGOUT_URL = os.environ.get('COGNITO_LOGOUT_URL', 'http://localhost:3000/')
-    
-    # OIDC Scopes to request
     COGNITO_SCOPES = os.environ.get('COGNITO_SCOPES', 'openid email profile').split(' ')
     
     # Response type - using authorization code flow for security

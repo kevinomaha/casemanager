@@ -3,11 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@aws-amplify/ui-react": "^5.3.1",
-    "aws-amplify": "^5.3.12",
     "axios": "^1.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-oidc-context": "^2.3.1",
     "react-router-dom": "^6.20.0",
     "react-scripts": "5.0.1",
     "workflow-manager": "file:"
