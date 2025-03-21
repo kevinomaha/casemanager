@@ -1,6 +1,26 @@
 import { render, screen } from '@testing-library/react';
-import { AuthProvider } from 'react-oidc-context';
 import App from './App';
+
+// Mock the dashboard component that imports axios
+jest.mock('./components/Dashboard', () => {
+  return function MockDashboard() {
+    return <div data-testid="dashboard-mock">Dashboard Mock</div>;
+  };
+});
+
+// Mock TasksList component
+jest.mock('./components/TasksList', () => {
+  return function MockTasksList() {
+    return <div data-testid="tasks-list-mock">Tasks List Mock</div>;
+  };
+});
+
+// Mock TaskDetail component
+jest.mock('./components/TaskDetail', () => {
+  return function MockTaskDetail() {
+    return <div data-testid="task-detail-mock">Task Detail Mock</div>;
+  };
+});
 
 // Mock react-oidc-context library
 jest.mock('react-oidc-context', () => {
@@ -11,8 +31,10 @@ jest.mock('react-oidc-context', () => {
         isLoading: false,
         isAuthenticated: false,
         signinRedirect: jest.fn(),
+        signoutRedirect: jest.fn(),
         error: null,
-        activeNavigator: null
+        activeNavigator: null,
+        user: null
       };
     }
   };
@@ -26,6 +48,8 @@ jest.mock('react-router-dom', () => {
     Route: ({ children }) => children,
     Link: ({ children }) => children,
     Navigate: () => <div>Navigate</div>,
+    useNavigate: () => jest.fn(),
+    Outlet: () => <div>Outlet</div>
   };
 });
 

@@ -17,7 +17,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --passWithNoTests",
+    "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!axios)/\" --passWithNoTests",
     "eject": "react-scripts eject",
     "lint": "eslint src/**/*.js"
   },
@@ -43,5 +43,13 @@
   "devDependencies": {
     "eslint": "^8.43.0",
     "eslint-plugin-react": "^7.32.2"
+  },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!axios)/"
+    ],
+    "moduleNameMapper": {
+      "axios": "<rootDir>/src/__mocks__/axios.js"
+    }
   }
 }
