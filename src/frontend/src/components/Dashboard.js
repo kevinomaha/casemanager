@@ -1,92 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { API, Auth } from 'aws-amplify';
+import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-const Dashboard = () => {
-  const [user, setUser] = useState(null);
-  const [tasks, setTasks] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+const Dashboard = ({ user }) => {
+  const [stats, setStats] = useState({
+    totalTasks: 0,
+    completedTasks: 0,
+    pendingTasks: 0
+  });
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function loadUserData() {
+    const fetchStats = async () => {
       try {
-        // Get user information
-        const currentUser = await Auth.currentAuthenticatedUser();
-        setUser(currentUser);
-
-        // Get tasks data
-        const taskData = await API.get('api', '/tasks');
-        setTasks(taskData);
-        
-        setIsLoading(false);
+        // For demo purposes - in a real app, this would fetch actual stats
+        setStats({
+          totalTasks: 15,
+          completedTasks: 8,
+          pendingTasks: 7
+        });
+        setLoading(false);
       } catch (err) {
-        console.error('Error loading user data:', err);
-        setError('Failed to load dashboard data. Please try again.');
-        setIsLoading(false);
+        setError('Failed to fetch dashboard statistics');
+        setLoading(false);
+        console.error('Error fetching stats:', err);
       }
-    }
+    };
 
-    loadUserData();
+    fetchStats();
   }, []);
 
-  if (isLoading) {
-    return <div className="loader">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
+  if (loading) return <div>Loading dashboard data...</div>;
+  if (error) return <div className="error-message">{error}</div>;
 
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Welcome, {user?.attributes?.given_name || 'User'}!</h1>
-        <p>Your personal workflow dashboard</p>
+        <h1>Dashboard</h1>
+        {user && (
+          <div className="user-greeting">
+            <p>Welcome, {user.profile.given_name || user.profile.email}</p>
+          </div>
+        )}
       </div>
-
-      <div className="dashboard-summary">
-        <div className="summary-card">
-          <h3>Tasks Assigned</h3>
-          <p className="summary-number">{tasks.length}</p>
-        </div>
-        <div className="summary-card">
-          <h3>Tasks in Progress</h3>
-          <p className="summary-number">
-            {tasks.filter(task => task.status === 'in_progress').length}
-          </p>
-        </div>
-        <div className="summary-card">
-          <h3>Completed Tasks</h3>
-          <p className="summary-number">
-            {tasks.filter(task => task.status === 'completed').length}
-          </p>
-        </div>
-      </div>
-
-      <div className="recent-tasks">
-        <div className="section-header">
-          <h2>Recent Tasks</h2>
-          <Link to="/tasks" className="view-all">View All Tasks</Link>
+      
+      <div className="stats-container">
+        <div className="stat-card">
+          <h3>Total Tasks</h3>
+          <p className="stat-value">{stats.totalTasks}</p>
         </div>
         
-        <div className="tasks-list">
-          {tasks.slice(0, 5).map(task => (
-            <div key={task.id} className="task-item">
-              <h3>
-                <Link to={`/tasks/${task.id}`}>{task.title}</Link>
-              </h3>
-              <p className="task-description">{task.description}</p>
-              <div className="task-footer">
-                <span className={`status-badge ${task.status}`}>{task.status}</span>
-              </div>
-            </div>
-          ))}
-          
-          {tasks.length === 0 && (
-            <p className="no-items-message">No tasks assigned to you.</p>
-          )}
+        <div className="stat-card">
+          <h3>Completed</h3>
+          <p className="stat-value">{stats.completedTasks}</p>
         </div>
+        
+        <div className="stat-card">
+          <h3>Pending</h3>
+          <p className="stat-value">{stats.pendingTasks}</p>
+        </div>
+      </div>
+      
+      <div className="dashboard-actions">
+        <Link to="/tasks" className="action-button">
+          View All Tasks
+        </Link>
       </div>
     </div>
   );

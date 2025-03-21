@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from 'react-oidc-context';
 
-const Navigation = () => {
+const Navigation = ({ signOutRedirect }) => {
   const auth = useAuth();
 
   return (
@@ -20,8 +20,11 @@ const Navigation = () => {
               <Link to="/tasks">Tasks</Link>
             </li>
             <li>
+              <Link to="/auth-debug">Auth Debug</Link>
+            </li>
+            <li>
               <button 
-                onClick={() => auth.signoutRedirect()} 
+                onClick={signOutRedirect} 
                 className="nav-button"
               >
                 Sign Out

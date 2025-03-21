@@ -13,6 +13,14 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   const auth = useAuth();
 
+  // Custom sign out function for Cognito
+  const signOutRedirect = () => {
+    const clientId = "30o9hu5r46ufq4o1ask25t4bpr";
+    const logoutUri = "https://d84l1y8p4kdic.cloudfront.net";
+    const cognitoDomain = "https://your-cognito-domain.auth.us-east-2.amazoncognito.com";
+    window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
+  };
+
   // Handle different auth states
   switch (auth.activeNavigator) {
     case "signinSilent":
@@ -32,7 +40,7 @@ function App() {
   return (
     <Router>
       <div className="App">
-        <Navigation />
+        <Navigation signOutRedirect={signOutRedirect} />
         <main>
           <Routes>
             <Route path="/" element={
@@ -49,18 +57,38 @@ function App() {
               )
             } />
             <Route path="/dashboard" element={
-              <ProtectedRoute isAuthenticated={auth.isAuthenticated}>
-                <Dashboard />
+              <ProtectedRoute>
+                <Dashboard user={auth.user} />
               </ProtectedRoute>
             } />
             <Route path="/tasks" element={
-              <ProtectedRoute isAuthenticated={auth.isAuthenticated}>
+              <ProtectedRoute>
                 <TasksList />
               </ProtectedRoute>
             } />
             <Route path="/tasks/:id" element={
-              <ProtectedRoute isAuthenticated={auth.isAuthenticated}>
+              <ProtectedRoute>
                 <TaskDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/auth-debug" element={
+              <ProtectedRoute>
+                <div className="auth-debug">
+                  <h2>Authentication Debug Information</h2>
+                  <p>Hello: {auth.user?.profile.email}</p>
+                  <div className="token-info">
+                    <h3>ID Token</h3>
+                    <pre>{auth.user?.id_token}</pre>
+                    
+                    <h3>Access Token</h3>
+                    <pre>{auth.user?.access_token}</pre>
+                    
+                    <h3>Refresh Token</h3>
+                    <pre>{auth.user?.refresh_token}</pre>
+                  </div>
+                  <button onClick={() => auth.removeUser()}>Sign out</button>
+                  <button onClick={signOutRedirect}>Sign out (Redirect)</button>
+                </div>
               </ProtectedRoute>
             } />
           </Routes>

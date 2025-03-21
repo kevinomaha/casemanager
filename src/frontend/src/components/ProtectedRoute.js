@@ -4,9 +4,9 @@ import { useAuth } from 'react-oidc-context';
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const auth = useAuth();
 
-  if (!isAuthenticated) {
+  if (!auth.isAuthenticated) {
     // Redirect to home page if not authenticated
     return <Navigate to="/" replace />;
   }

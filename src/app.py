@@ -1,9 +1,17 @@
 import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
-from dotenv import load_dotenv
-from src.utils.config import Config
+from utils.config import (
+    CORS_ALLOWED_ORIGINS, 
+    COGNITO_REGION, 
+    COGNITO_USER_POOL_ID, 
+    COGNITO_CLIENT_ID,
+    COGNITO_DOMAIN,
+    COGNITO_CALLBACK_URL,
+    COGNITO_LOGOUT_URL,
+    COGNITO_SCOPES
+)
+from utils.cognito_verify import verify_cognito_token
 from src.controllers.tasks import tasks_blueprint
 
 # Load environment variables
@@ -13,8 +21,8 @@ load_dotenv()
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Enable CORS
-CORS(app, resources={r"/api/*": {"origins": app.config.get('CORS_ALLOWED_ORIGINS', '*')}})
+# Configure CORS
+CORS(app, resources={r"/api/*": {"origins": CORS_ALLOWED_ORIGINS}})
 
 # Setup JWT
 jwt = JWTManager(app)
@@ -25,25 +33,24 @@ app.register_blueprint(tasks_blueprint, url_prefix='/api/tasks')
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Simple health check endpoint"""
-    return jsonify({
-        'status': 'up',
-        'message': 'API is running'
-    })
+    return jsonify({"status": "healthy"}), 200
 
 @app.route('/api/cognito-config', methods=['GET'])
-def cognito_config():
+def get_cognito_config():
     """
     Endpoint to provide Cognito configuration to the frontend
     This avoids hardcoding these values in the frontend code
     """
-    return jsonify({
-        'region': app.config.get('COGNITO_REGION'),
-        'userPoolId': app.config.get('COGNITO_USER_POOL_ID'),
-        'clientId': app.config.get('COGNITO_CLIENT_ID'),
-        'domain': app.config.get('COGNITO_DOMAIN'),
-        'redirectSignIn': app.config.get('COGNITO_CALLBACK_URL'),
-        'redirectSignOut': app.config.get('COGNITO_LOGOUT_URL'),
-    })
+    config = {
+        "region": COGNITO_REGION,
+        "userPoolId": COGNITO_USER_POOL_ID,
+        "clientId": COGNITO_CLIENT_ID,
+        "domain": COGNITO_DOMAIN,
+        "callbackUrl": COGNITO_CALLBACK_URL,
+        "logoutUrl": COGNITO_LOGOUT_URL,
+        "scopes": COGNITO_SCOPES
+    }
+    return jsonify(config), 200
 
 @app.route('/api/validate-token', methods=['POST'])
 def validate_token():
@@ -52,19 +59,23 @@ def validate_token():
     The frontend can call this to verify if a token is still valid
     """
     try:
-        data = request.get_json()
-        token = data.get('token')
-        
+        token = request.json.get('token')
         if not token:
-            return jsonify({'valid': False, 'error': 'No token provided'}), 400
-            
-        # In a real implementation, we would verify the token
-        # For now, we'll just return success
-        # In production, use aws-jwt-verify or other JWT verification libraries
+            return jsonify({"error": "No token provided"}), 400
         
-        return jsonify({'valid': True})
+        # Verify the token
+        claims = verify_cognito_token(token)
+        
+        # Return the claims if token is valid
+        return jsonify({
+            "valid": True,
+            "claims": claims
+        }), 200
     except Exception as e:
-        return jsonify({'valid': False, 'error': str(e)}), 500
+        return jsonify({
+            "valid": False,
+            "error": str(e)
+        }), 401
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
